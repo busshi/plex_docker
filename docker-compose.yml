@@ -1,0 +1,36 @@
+version: '3.7'
+
+networks:
+  traefik_network:
+
+services:
+  plex:
+    image: linuxserver/plex:latest
+    container_name: plex
+    networks:
+      - traefik_network
+    restart: unless-stopped
+    ports:
+      - 32400:32400
+    environment:
+      - PUID=1001
+      - PGID=1001
+      - TZ=Europe/Paris
+      - PLEX_CLAIM=CLAIM_KEY
+      - ADVERTISE_IP=SUB_DOMAIN.COM:443
+    volumes:
+      - /home/plex/config:/config
+      - /home/plex/movies:/data/movies
+      - /home/plex/tv:/data/tv
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik_network"
+      - "traefik.http.routers.plex.entrypoints=web,websecure"
+      - "traefik.http.routers.plex.rule=Host(`SUB_DOMAIN.COM`)"
+      - "traefik.http.services.plex.loadbalancer.server.port=32400"
+      - "traefik.http.routers.plex.tls=true"
+      - "traefik.http.routers.plex.tls.certresolver=leresolver"
+
+networks:
+  traefik_network:
+    external: true
